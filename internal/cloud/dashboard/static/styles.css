@@ -611,7 +611,7 @@ form.browser-controls button[type="submit"] {
 	margin: 0;
 	padding-block: var(--pico-form-element-spacing-vertical);
 	justify-self: stretch;
-	align-self: stretch;
+	align-self: start;
 }
 
 .browser-controls > :only-child {
