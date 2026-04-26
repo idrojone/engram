@@ -76,9 +76,8 @@ func (cs *CloudStore) SetProjectSyncEnabled(project string, enabled bool, update
 	if err != nil {
 		return fmt.Errorf("cloudstore: SetProjectSyncEnabled: %w", err)
 	}
-	// W4: invalidate the dashboard read model cache so SystemHealth / paused_projects
-	// reflect the change immediately without waiting for the next chunk write.
-	cs.invalidateDashboardReadModel()
+	// W4: invalidate the dashboard read model cache removed in centralized mode.
+	// cs.invalidateDashboardReadModel()
 	return nil
 }
 
@@ -124,7 +123,7 @@ func (cs *CloudStore) ListProjectSyncControls() ([]ProjectSyncControl, error) {
 		    c.updated_by,
 		    c.updated_at
 		FROM (
-		    SELECT DISTINCT project_name AS project FROM cloud_chunks
+		    SELECT id AS project FROM cloud_projects
 		    UNION
 		    SELECT project FROM cloud_project_controls
 		) p

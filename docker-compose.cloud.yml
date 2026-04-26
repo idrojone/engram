@@ -34,7 +34,7 @@ services:
       ENGRAM_CLOUD_TOKEN: ${ENGRAM_CLOUD_TOKEN}
     ports:
       - "0.0.0.0:${ENGRAM_PORT}:${ENGRAM_PORT}"
-    command: [ "cloud", "serve" ]
+    command: [ "serve" ]
 
 volumes:
   engram-cloud-pg:
