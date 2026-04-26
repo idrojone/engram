@@ -2164,15 +2164,28 @@ Environment:
 	                     Ignored/rejected in insecure mode (ENGRAM_CLOUD_INSECURE_NO_AUTH=1)
 
 MCP Configuration (add to your agent's config):
-  {
-    "mcp": {
-      "engram": {
-        "type": "stdio",
-        "command": "engram",
-        "args": ["mcp", "--tools=agent"]
+
+  Standard (Claude Code, Gemini CLI, Cursor):
+    {
+      "mcp": {
+        "engram": {
+          "type": "stdio",
+          "command": "engram",
+          "args": ["mcp", "--tools=agent"]
+        }
       }
     }
-  }
+
+  OpenCode:
+    {
+      "mcp": {
+        "engram": {
+          "type": "local",
+          "command": ["engram", "mcp", "--tools=agent"],
+          "enabled": true
+        }
+      }
+    }
 `, version)
 }
 
