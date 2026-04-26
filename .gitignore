@@ -29,3 +29,6 @@ Thumbs.db
 engram-dev
 .atl/
 .release-notes-beta.md
+
+# ENV
+.env
