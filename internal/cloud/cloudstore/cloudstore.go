@@ -588,6 +588,7 @@ func (cs *CloudStore) InsertMutationBatch(ctx context.Context, batch []MutationE
 		return nil, fmt.Errorf("cloudstore: commit mutation batch: %w", err)
 	}
 	tx = nil // mark committed so deferred Rollback is a no-op
+	cs.invalidateDashboardReadModel()
 	return seqs, nil
 }
 
