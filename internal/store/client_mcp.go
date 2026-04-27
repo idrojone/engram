@@ -7,7 +7,7 @@ type Relation struct {
 	SyncID                string   `json:"sync_id"`
 	SourceID              string   `json:"source_id"`
 	TargetID              string   `json:"target_id"`
-	Relation              string   `json:"relation"`
+	Relation              RelationType `json:"relation"`
 	Reason                *string  `json:"reason,omitempty"`
 	Evidence              *string  `json:"evidence,omitempty"`
 	Confidence            *float64 `json:"confidence,omitempty"`
@@ -27,7 +27,7 @@ type ObservationRelations struct {
 
 type JudgeRelationParams struct {
 	JudgmentID    string   `json:"judgment_id"`
-	Relation      string   `json:"relation"`
+	Relation      RelationType `json:"relation"`
 	Reason        *string  `json:"reason,omitempty"`
 	Evidence      *string  `json:"evidence,omitempty"`
 	Confidence    *float64 `json:"confidence,omitempty"`

@@ -16,15 +16,14 @@ import (
 func TestAuditLogMigrationIdempotent(t *testing.T) {
 	cs := openTestCloudStore(t)
 
-	ctx := context.Background()
 
 	// First call already ran in New(), so call again directly.
-	if err := cs.migrate(ctx); err != nil {
+	if err := cs.migrate(); err != nil {
 		t.Fatalf("second migrate() call returned error: %v", err)
 	}
 
 	// Third call to be absolutely certain.
-	if err := cs.migrate(ctx); err != nil {
+	if err := cs.migrate(); err != nil {
 		t.Fatalf("third migrate() call returned error: %v", err)
 	}
 }

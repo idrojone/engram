@@ -105,6 +105,49 @@ func (cs *CloudStore) migrate() error {
 			PRIMARY KEY (project_id, user_id)
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_cloud_project_members_user ON cloud_project_members(user_id)`,
+		// ── Project Controls (Sync Pause/Enable) ──
+		`CREATE TABLE IF NOT EXISTS cloud_project_controls (
+			project TEXT PRIMARY KEY,
+			sync_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+			paused_reason TEXT,
+			updated_by TEXT,
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
+		// ── Audit Log ──
+		`CREATE TABLE IF NOT EXISTS cloud_sync_audit_log (
+			id BIGSERIAL PRIMARY KEY,
+			occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			contributor TEXT NOT NULL,
+			project TEXT NOT NULL,
+			action TEXT NOT NULL,
+			outcome TEXT NOT NULL,
+			entry_count INT NOT NULL DEFAULT 0,
+			reason_code TEXT,
+			metadata JSONB
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_project ON cloud_sync_audit_log(project)`,
+		`CREATE INDEX IF NOT EXISTS idx_audit_occurred ON cloud_sync_audit_log(occurred_at)`,
+		// ── Chunks & Mutations (Legacy/Sync support) ──
+		`CREATE TABLE IF NOT EXISTS cloud_chunks (
+			project_name TEXT NOT NULL,
+			chunk_id TEXT NOT NULL,
+			created_by TEXT NOT NULL,
+			payload JSONB NOT NULL,
+			sessions_count INT NOT NULL,
+			observations_count INT NOT NULL,
+			prompts_count INT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (project_name, chunk_id)
+		)`,
+		`CREATE TABLE IF NOT EXISTS cloud_mutations (
+			id BIGSERIAL PRIMARY KEY,
+			project TEXT NOT NULL,
+			entity TEXT NOT NULL,
+			entity_key TEXT NOT NULL,
+			op TEXT NOT NULL,
+			payload JSONB NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`,
 	}
 
 	for i, query := range queries {

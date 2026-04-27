@@ -1557,7 +1557,7 @@ func handleJudge(s *store.Store, activity *SessionActivity) server.ToolHandlerFu
 
 		result, err := s.JudgeRelation(store.JudgeRelationParams{
 			JudgmentID:    judgmentID,
-			Relation:      relation,
+			Relation:      store.RelationType(relation),
 			Reason:        reason,
 			Evidence:      evidence,
 			Confidence:    confidence,

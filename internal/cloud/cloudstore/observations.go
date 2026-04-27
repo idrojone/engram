@@ -27,12 +27,13 @@ func (cs *CloudStore) CreateObservation(ctx context.Context, obs CloudObservatio
 	err := cs.db.QueryRowContext(ctx, `
 		SELECT COUNT(*) 
 		FROM cloud_sessions s
-		JOIN cloud_project_members m ON s.project_id = m.project_id
-		WHERE s.id = $1 AND m.user_id = $2`, obs.SessionID, userID).Scan(&memberCount)
+		JOIN cloud_projects p ON s.project_id = p.id
+		LEFT JOIN cloud_project_members m ON p.id = m.project_id
+		WHERE s.id = $1 AND (p.owner_id = $2 OR m.user_id = $2 OR p.owner_id IS NULL)`, obs.SessionID, userID).Scan(&memberCount)
 	if err != nil {
 		return 0, fmt.Errorf("verify session membership: %w", err)
 	}
-	if memberCount == 0 {
+	if memberCount == 0 && userID != 0 {
 		return 0, fmt.Errorf("session %q: user is not a member of this project", obs.SessionID)
 	}
 

@@ -3,6 +3,7 @@ package cloudstore
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -157,4 +158,45 @@ func (cs *CloudStore) ListProjectSyncControls() ([]ProjectSyncControl, error) {
 		return nil, fmt.Errorf("cloudstore: ListProjectSyncControls iterate: %w", err)
 	}
 	return result, nil
+}
+
+// MutationEntry represents a single change to be recorded in the mutation log.
+type MutationEntry struct {
+	Project   string          `json:"project"`
+	Entity    string          `json:"entity"`
+	EntityKey string          `json:"entity_key"`
+	Op        string          `json:"op"`
+	Payload   json.RawMessage `json:"payload"`
+}
+
+// InsertMutationBatch inserts a batch of mutations atomically in a transaction.
+func (cs *CloudStore) InsertMutationBatch(ctx context.Context, batch []MutationEntry) ([]int64, error) {
+	if cs == nil || cs.db == nil {
+		return nil, fmt.Errorf("cloudstore: not initialized")
+	}
+	tx, err := cs.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	var ids []int64
+	for _, entry := range batch {
+		var id int64
+		err := tx.QueryRowContext(ctx, `
+			INSERT INTO cloud_mutations (project, entity, entity_key, op, payload)
+			VALUES ($1, $2, $3, $4, $5)
+			RETURNING id`,
+			entry.Project, entry.Entity, entry.EntityKey, entry.Op, entry.Payload,
+		).Scan(&id)
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

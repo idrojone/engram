@@ -33,10 +33,11 @@ func (cs *CloudStore) EndSession(ctx context.Context, sessionID, endedAt string,
 	query := `
 		UPDATE cloud_sessions 
 		SET ended_at = $1, summary = $2
-		FROM cloud_project_members m
+		FROM cloud_projects p
+		LEFT JOIN cloud_project_members m ON p.id = m.project_id
 		WHERE cloud_sessions.id = $3 
-		  AND cloud_sessions.project_id = m.project_id 
-		  AND m.user_id = $4
+		  AND cloud_sessions.project_id = p.id
+		  AND (p.owner_id = $4 OR m.user_id = $4 OR p.owner_id IS NULL)
 	`
 	res, err := cs.db.ExecContext(ctx, query, endedAt, summary, sessionID, userID)
 	if err != nil {

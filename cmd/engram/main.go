@@ -284,11 +284,11 @@ func cmdTimeline(cfg store.Config) {
 	}
 
 	for _, entry := range tl.Before {
-		fmt.Printf("[%s] %s\n", entry.ID, entry.Title)
+		fmt.Printf("[%d] %s\n", entry.ID, entry.Title)
 	}
 	fmt.Printf(">>> [%d] %s <<<\n", tl.Focus.ID, tl.Focus.Title)
 	for _, entry := range tl.After {
-		fmt.Printf("[%s] %s\n", entry.ID, entry.Title)
+		fmt.Printf("[%d] %s\n", entry.ID, entry.Title)
 	}
 }
 

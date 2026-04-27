@@ -138,6 +138,7 @@ type ExportData struct {
 	ExportedAt   string        `json:"exported_at"`
 	Sessions     []Session     `json:"sessions"`
 	Observations []Observation `json:"observations"`
+	Prompts      []Prompt      `json:"prompts"`
 }
 
 type SessionSummary struct {
@@ -213,6 +214,7 @@ func SuggestTopicKey(typ, title, content string) string {
 type Config struct {
 	BaseURL string `json:"base_url"`
 	APIKey  string `json:"api_key"`
+	DataDir string `json:"data_dir"` // Kept for legacy compatibility
 }
 
 type Store struct {
@@ -278,3 +280,58 @@ func (s *Store) req(ctx context.Context, method, endpoint string, payload any, r
 	}
 	return nil
 }
+// ─── Relations (Legacy/MCP compatibility) ───────────────────────
+
+type JudgmentStatus string
+
+const (
+	JudgmentStatusPending JudgmentStatus = "pending"
+	JudgmentStatusJudged  JudgmentStatus = "judged"
+)
+
+type RelationType string
+
+const (
+	RelationCompatible    RelationType = "compatible"
+	RelationConflictsWith RelationType = "conflicts_with"
+)
+
+func (s *Store) EnrollProject(projectID string) error {
+	return nil // Stub
+}
+
+func (s *Store) GetRelation(id string) (*Relation, error) {
+	return nil, nil // Stub
+}
+
+func (s *Store) SaveRelation(params SaveRelationParams) (int64, error) {
+	return 0, nil // Stub
+}
+
+type SaveRelationParams struct {
+	ID             int64          `json:"id"`
+	SyncID         string         `json:"sync_id"`
+	SourceID       string         `json:"source_id"`
+	TargetID       string         `json:"target_id"`
+	SubjectID      int64          `json:"subject_id"`
+	ObjectID       int64          `json:"object_id"`
+	Type           RelationType   `json:"type"`
+	Status         JudgmentStatus `json:"status"`
+}
+
+
+
+
+type MutationEntry struct {
+	Project   string          `json:"project"`
+	Entity    string          `json:"entity"`
+	EntityKey string          `json:"entity_key"`
+	Op        string          `json:"op"`
+	Payload   json.RawMessage `json:"payload"`
+}
+
+func (s *Store) InsertMutationBatch(ctx context.Context, batch []MutationEntry) ([]int64, error) {
+	return nil, nil // Stub
+}
+
+
