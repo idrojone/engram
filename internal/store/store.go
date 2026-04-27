@@ -211,8 +211,8 @@ func SuggestTopicKey(typ, title, content string) string {
 // ─── HTTP Proxy Store ───────────────────────────────────────────
 
 type Config struct {
-	BaseURL string
-	APIKey  string
+	BaseURL string `json:"base_url"`
+	APIKey  string `json:"api_key"`
 }
 
 type Store struct {

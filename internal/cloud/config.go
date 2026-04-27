@@ -26,7 +26,7 @@ func DefaultConfig() Config {
 		CORSOrigins: []string{"*"},
 		MaxPool:     10,
 		Port:        8080,
-		BindHost:    "127.0.0.1",
+		BindHost:    "[IP_ADDRESS]",
 	}
 }
 

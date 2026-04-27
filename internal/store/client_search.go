@@ -43,11 +43,60 @@ func (s *Store) FormatContext(project, scope string) (string, error) {
 }
 
 func (s *Store) Timeline(observationID int64, before, after int) (*TimelineResult, error) {
-	return nil, errors.New("Timeline not implemented in cloud proxy")
+	var resp struct {
+		Status string        `json:"status"`
+		Data   []Observation `json:"data"`
+	}
+	url := fmt.Sprintf("/api/v1/observations/%d/timeline?before=%d&after=%d", observationID, before, after)
+	err := s.req(context.Background(), "GET", url, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	
+	res := &TimelineResult{
+		TotalInRange: len(resp.Data),
+	}
+	for _, o := range resp.Data {
+		entry := TimelineEntry{
+			ID:             o.ID,
+			SessionID:      o.SessionID,
+			Type:           o.Type,
+			Title:          o.Title,
+			Content:        o.Content,
+			ToolName:       o.ToolName,
+			Project:        o.Project,
+			Scope:          o.Scope,
+			TopicKey:       o.TopicKey,
+			RevisionCount:  o.RevisionCount,
+			DuplicateCount: o.DuplicateCount,
+			LastSeenAt:     o.LastSeenAt,
+			CreatedAt:      o.CreatedAt,
+			UpdatedAt:      o.UpdatedAt,
+			DeletedAt:      o.DeletedAt,
+			IsFocus:        o.ID == observationID,
+		}
+
+		if o.ID == observationID {
+			res.Focus = o
+		} else if o.ID < observationID {
+			res.Before = append(res.Before, entry)
+		} else {
+			res.After = append(res.After, entry)
+		}
+	}
+	return res, nil
 }
 
 func (s *Store) Stats() (*Stats, error) {
-	return &Stats{}, nil
+	var resp struct {
+		Status string `json:"status"`
+		Data   Stats  `json:"data"`
+	}
+	err := s.req(context.Background(), "GET", "/api/v1/stats", nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.Data, nil
 }
 
 func (s *Store) Export() (*ExportData, error) {
@@ -55,11 +104,23 @@ func (s *Store) Export() (*ExportData, error) {
 }
 
 func (s *Store) GetObservation(id int64) (*Observation, error) {
-	return nil, errors.New("GetObservation not implemented")
+	var resp struct {
+		Status string      `json:"status"`
+		Data   Observation `json:"data"`
+	}
+	err := s.req(context.Background(), "GET", fmt.Sprintf("/api/v1/observations/%d", id), nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.Data, nil
 }
 
 func (s *Store) HardDeleteObservation(id int64) error {
-	return errors.New("HardDeleteObservation not implemented")
+	return s.DeleteObservation(id, true)
+}
+
+func (s *Store) DeleteObservation(id int64, hard bool) error {
+	return s.req(context.Background(), "DELETE", fmt.Sprintf("/api/v1/observations/%d", id), nil, nil)
 }
 
 func (s *Store) DeleteSession(id string) error {
@@ -79,15 +140,38 @@ func (s *Store) DeletePrompt(id int64) error {
 }
 
 func (s *Store) UpdateSession(id string, summary *string) error {
-	return errors.New("UpdateSession not implemented")
+	var req struct {
+		Summary *string `json:"summary"`
+	}
+	req.Summary = summary
+	return s.req(context.Background(), "PUT", fmt.Sprintf("/api/v1/sessions/%s/summary", id), req, nil)
 }
 
 func (s *Store) RecentSessions(project string, limit int) ([]SessionSummary, error) {
-	return nil, errors.New("RecentSessions not implemented")
+	var resp struct {
+		Status string           `json:"status"`
+		Data   []SessionSummary `json:"data"`
+	}
+	url := fmt.Sprintf("/api/v1/context/sessions?project=%s&limit=%d", project, limit)
+	err := s.req(context.Background(), "GET", url, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Data, nil
 }
 
 func (s *Store) RecentObservations(project, scope string, limit int) ([]Observation, error) {
-	return nil, errors.New("RecentObservations not implemented")
+	var resp struct {
+		Status string        `json:"status"`
+		Data   []Observation `json:"data"`
+	}
+	url := fmt.Sprintf("/api/v1/context/observations?project=%s&limit=%d", project, limit)
+	// Scope is not currently used by the cloud implementation's RecentObservations, but we could add it to URL if needed.
+	err := s.req(context.Background(), "GET", url, nil, &resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Data, nil
 }
 
 func (s *Store) RecentPrompts(project string, limit int) ([]Prompt, error) {
@@ -145,10 +229,10 @@ func (s *Store) CreateSession(id string, project string, directory string) error
 	return err
 }
 
-func (s *Store) DeleteObservation(id int64, hard bool) error {
-	return errors.New("DeleteObservation not implemented")
-}
-
 func (s *Store) UpdateObservation(id int64, params UpdateObservationParams) (*Observation, error) {
-	return nil, errors.New("UpdateObservation not implemented")
+	err := s.req(context.Background(), "PUT", fmt.Sprintf("/api/v1/observations/%d", id), params, nil)
+	if err != nil {
+		return nil, err
+	}
+	return s.GetObservation(id)
 }

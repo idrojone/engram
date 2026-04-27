@@ -96,6 +96,15 @@ func (cs *CloudStore) migrate() error {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)`,
 		`CREATE INDEX IF NOT EXISTS idx_cloud_prompts_session ON cloud_prompts(session_id)`,
+		// ── Collaborative memberships ──
+		`CREATE TABLE IF NOT EXISTS cloud_project_members (
+			project_id TEXT NOT NULL REFERENCES cloud_projects(id) ON DELETE CASCADE,
+			user_id BIGINT NOT NULL REFERENCES cloud_users(id) ON DELETE CASCADE,
+			role TEXT NOT NULL DEFAULT 'member',
+			joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			PRIMARY KEY (project_id, user_id)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_cloud_project_members_user ON cloud_project_members(user_id)`,
 	}
 
 	for i, query := range queries {
