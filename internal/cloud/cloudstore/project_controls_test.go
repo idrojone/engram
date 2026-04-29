@@ -295,6 +295,35 @@ func TestInsertMutationBatchIsAtomicOnFailure(t *testing.T) {
 	}
 }
 
+func TestInsertMutationBatchInvalidatesDashboardReadModel(t *testing.T) {
+	driverName := "cloudstore-partial-fail-driver"
+	resetPartialFailDriver(10)
+
+	db, err := sql.Open(driverName, "dsn")
+	if err != nil {
+		t.Fatalf("open: %v", err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+
+	cs := &CloudStore{db: db}
+	cs.dashboardReadModel = dashboardReadModel{
+		projects: []DashboardProjectRow{{Project: "proj-a", Chunks: 1}},
+	}
+	cs.dashboardReadModelOK = true
+
+	batch := []MutationEntry{{Project: "proj-a", Entity: "obs", EntityKey: "k1", Op: "upsert", Payload: json.RawMessage(`{}`)}}
+	if _, err := cs.InsertMutationBatch(context.Background(), batch); err != nil {
+		t.Fatalf("InsertMutationBatch: %v", err)
+	}
+
+	if cs.dashboardReadModelOK {
+		t.Fatal("expected InsertMutationBatch to invalidate dashboard read model cache")
+	}
+	if len(cs.dashboardReadModel.projects) != 0 {
+		t.Fatalf("expected read model cache cleared, got %+v", cs.dashboardReadModel.projects)
+	}
+}
+
 // TestProjectSyncControlListIncludesKnownChunkProjects asserts that
 // ListProjectSyncControls returns projects that appear in cloud_chunks
 // even if they have no explicit control row. Satisfies REQ-104.
